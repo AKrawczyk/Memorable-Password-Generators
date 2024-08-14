@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <title>Memorable Password Generator</title>
+    <style>
+        :root {
+            --main-bright-color: #0074D9;
+            --main-dark-color: #002B49;
+            --secondary-bright-color: #FFF;
+            --secondary-dark-color: #212322;
+            --danger-color: #b20000;
+            --warning-color: #888;
+            --success-color: #497d35;
+            --base-font-size: 16px
+        }
+
+        :root[lang="bg"],
+        :root[lang="ru"],
+        :root[lang="uk"],
+        :root[lang="el"],
+        :root[lang="he"] {
+            --regular-font: Helvetica
+        }
+
+        * {
+            box-sizing: border-box;
+            text-decoration: none;
+            list-style: none;
+            color: inherit;
+            font-family: var(--regular-font), sans-serif;
+            border: none;
+            font-size: 100%;
+            background: none;
+            outline: none;
+            -webkit-text-size-adjust: none;
+            margin: 0;
+            padding: 0
+        }
+
+        html {
+            height: 100%;
+            width: 100%;
+            max-width: 1366px;
+            background: #fff linear-gradient(90deg, rgba(0, 0, 0, .8), rgba(0, 0, 0, .5), rgba(0, 0, 0, .8));
+            margin: 0 auto
+        }
+
+        body {
+            background: var(--secondary-bright-color);
+            color: var(--secondary-dark-color);
+            font-size: var(--base-font-size);
+            cursor: default;
+            display: inline-flex;
+            flex-direction: column;
+            min-height: 100%;
+            min-width: 100%
+        }
+
+        abbr[title],
+        acronym[title] {
+            text-decoration: dotted underline
+        }
+
+        table {
+            width: 100%;
+            position: relative;
+            border-collapse: collapse;
+            margin: 0 0 1rem
+        }
+
+        tr[data-title]::before {
+            content: attr(data-title);
+            display: table-cell;
+            border-top: 1px solid var(--main-dark-color);
+            padding: .5em
+        }
+
+        th {
+            text-align: left;
+            font-weight: 700;
+            padding: .5em
+        }
+
+        td {
+            border-top: 1px solid var(--main-dark-color);
+            vertical-align: middle;
+            padding: .5em
+        }
+
+        td input:not([type]),
+        td input[type="text"],
+        td input[type="password"],
+        td select,
+        td .cbi-dropdown:not(.btn):not(.cbi-button),
+        td .cbi-dynlist,
+        td .control-group {
+            min-width: auto;
+            width: 100%
+        }
+
+        tr.drag-over-above {
+            box-shadow: 0 -6px 6px var(--main-bright-color)
+        }
+
+        tr.drag-over-below {
+            box-shadow: 0 6px 6px var(--main-bright-color)
+        }
+
+        tr.placeholder {
+            height: 4em;
+            position: relative
+        }
+
+        tr.placeholder>td {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            text-align: center;
+            line-height: 3em;
+            font-size: 90%;
+            opacity: .8
+        }
+
+        .left {
+            text-align: left !important
+        }
+
+        .right {
+            text-align: right !important
+        }
+
+        .center {
+            text-align: center !important
+        }
+
+        .top {
+            vertical-align: top !important
+        }
+
+        .bottom {
+            vertical-align: bottom !important
+        }
+
+        .middle {
+            vertical-align: middle !important
+        }
+
+        .nowrap {
+            white-space: nowrap !important
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        [width="33%"] {
+            width: 33%;
+            max-width: 33%
+        }
+
+        [width="50%"] {
+            width: 50%;
+            max-width: 50%
+        }
+
+        [data-name="_freq"] select {
+            min-width: auto
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .cbi-section>legend:first-child {
+            font-weight: 700;
+            margin: 0 0 1rem
+        }
+
+        strong,
+        b {
+            font-weight: 700
+        }
+
+        h1 {
+            font-size: 160%
+        }
+
+        h2 {
+            font-size: 150%
+        }
+
+        h4 {
+            font-size: 130%
+        }
+
+        p>textarea:last-child {
+            margin: 0
+        }
+
+        var {
+            color: var(--main-dark-color);
+            font-weight: 700
+        }
+
+        code {
+            font-family: monospace;
+            color: var(--main-dark-color)
+        }
+
+        pre {
+            font-family: monospace;
+            font-size: .9rem;
+            box-shadow: inset 0 0 2px var(--main-dark-color);
+            overflow: auto;
+            margin: 0 0 1em;
+            padding: .25rem
+        }
+
+        small {
+            font-size: 95%
+        }
+
+        ul {
+            padding: 0 0 0 1.5em
+        }
+
+        ul>li {
+            list-style: disc
+        }
+
+        p>a {
+            text-decoration: underline
+        }
+
+        button,
+        .btn {
+            background: var(--main-bright-color);
+            color: var(--secondary-bright-color);
+            line-height: 1.5em;
+            border-radius: .25em;
+            cursor: pointer;
+            box-shadow: 0 0 2px var(--main-dark-color);
+            display: inline-block;
+            padding: 0 .5em
+        }
+
+        button:hover,
+        .btn:hover {
+            box-shadow: 0 0 6px var(--main-bright-color)
+        }
+
+        input[type="checkbox"],
+        input[type="radio"] {
+            --bd-color: var(--main-dark-color);
+            --fg-color: var(--main-dark-color);
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1em;
+            height: 1em;
+            color: var(--fg-color);
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            background: none;
+            border: none
+        }
+
+        input[type="checkbox"]::before,
+        input[type="checkbox"]::after,
+        input[type="radio"]::before,
+        input[type="radio"]::after {
+            position: absolute;
+            content: "";
+            margin: .15em 0
+        }
+
+        input[type="checkbox"]::before,
+        input[type="radio"]::before {
+            top: 0;
+            left: 0;
+            width: 1em;
+            height: 1em;
+            box-shadow: 0 0 2px var(--bd-color) !important;
+            border-radius: .25em
+        }
+
+        input[type="radio"],
+        input[type="radio"]::before {
+            border-radius: 50%
+        }
+
+        input[type="checkbox"]::after,
+        input[type="radio"]::after {
+            top: .15em;
+            left: .15em;
+            width: .7em;
+            height: .7em
+        }
+
+        input[type="checkbox"]:checked::after,
+        input[type="radio"]:checked::after {
+            --checkmark-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><path d='m2.5 7.4 7.5 7.5-2.5 2.4L0 10Zm15-5L20 4.9 7.5 17.3 5 15Z'/></svg>");
+            -webkit-mask: var(--checkmark-icon) center/cover no-repeat;
+            mask: var(--checkmark-icon) center/cover no-repeat;
+            background: var(--fg-color)
+        }
+
+        input[type="radio"]:checked:after {
+            --checkmark-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><circle cx='10' cy='10' r='7'/></svg>")
+        }
+
+        input[type="checkbox"].cbi-input-invalid,
+        input[type="radio"].cbi-input-invalid {
+            --bd-color: var(--danger-color);
+            --fg-color: var(--danger-color)
+        }
+
+        input:not([type]),
+        input[type="text"],
+        input[type="password"],
+        input[type="datetime-local"],
+        input[type="number"],
+        select,
+        .cbi-dropdown:not(.btn):not(.cbi-button) {
+            border-bottom: 2px solid transparent;
+            box-shadow: inset 0 0 1px var(--main-dark-color);
+            line-height: 1.5rem;
+            min-height: calc(1.5rem + 2px);
+            min-width: 20rem;
+            border-radius: .25em;
+            padding: 0 .2rem
+        }
+
+        input:not([type]):focus,
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="datetime-local"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        .cbi-dropdown:not(.btn):not(.cbi-button):focus,
+        .cbi-dropdown[open]:not(.btn):not(.cbi-button) {
+            border-color: var(--main-dark-color)
+        }
+
+        input:not([type])+.btn,
+        input:not([type])+button,
+        input[type="text"]+.btn,
+        input[type="text"]+button,
+        input[type="password"]+.btn,
+        input[type="password"]+button {
+            background: var(--main-dark-color);
+            border-radius: 0 .25em .25em 0;
+            margin: 0 0 2px -1px
+        }
+
+        select {
+            padding: .1rem 0
+        }
+
+        textarea {
+            width: 100%;
+            box-shadow: inset 0 0 2px var(--main-dark-color);
+            font-family: monospace;
+            font-size: .9rem;
+            padding: .2rem
+        }
+
+        h3,
+        .cbi-section>legend:first-child {
+            font-size: 140%
+        }
+
+        h6,
+        big {
+            font-size: 110%
+        }
+
+        p,
+        ul,
+        textarea,
+        .cbi-map-descr,
+        .cbi-tab-descr,
+        .cbi-section-descr,
+        .cbi-section-table,
+        .cbi-section-create,
+        #view> :last-child {
+            margin: 0 0 1em
+        }
+
+        @keyframes fade-in {
+            0% {
+                opacity: 0
+            }
+
+            100% {
+                opacity: 1
+            }
+        }
+
+        @keyframes fade-out {
+            0% {
+                opacity: 1
+            }
+
+            100% {
+                opacity: 0
+            }
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        @media only screen and (max-width: 800px) {
+            body {
+                padding-top: 70px
+            }
+
+            table {
+                display: flex;
+                flex-direction: column
+            }
+
+            tr {
+                display: block;
+                border-bottom: 1px solid var(--main-dark-color);
+                margin-bottom: .5em;
+                padding-bottom: .5em
+            }
+
+            tr[data-title]::before {
+                display: block;
+                font-weight: 700;
+                border-top: none;
+                font-size: 110%;
+                padding: .4em 0
+            }
+
+            td {
+                display: block;
+                border-top: none;
+                text-align: left !important;
+                padding: .2em 0
+            }
+
+            td[data-title] {
+                position: relative;
+                padding: .2em 0 .2em 40%
+            }
+
+            td[data-title]::before {
+                content: attr(data-title) ": ";
+                white-space: nowrap;
+                font-weight: 700;
+                width: 40%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                text-align: left;
+                display: inline-flex;
+                align-items: center;
+                padding: .2em 0
+            }
+
+            td[data-title]::after {
+                content: "";
+                width: 2em;
+                position: absolute;
+                left: calc(40% - 2em);
+                top: 0;
+                bottom: 0;
+                display: block;
+                background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--secondary-bright-color) 90%)
+            }
+            
+            input:not([type]),
+            input[type="password"],
+            select,
+            .cbi-dropdown:not(.btn):not(.cbi-button),
+            .cbi-dynlist {
+                min-height: calc(2.2rem + 2px);
+                line-height: 2.2rem;
+                font-size: 1.2rem;
+                min-width: 10rem
+            }
+
+            button,
+            .btn {
+                line-height: 1.8rem;
+                font-size: 1.2rem
+            }
+
+            select {
+                padding: .4em 0
+            }
+        }
+
+        @media only screen and (min-width: 800px) and (max-width: 1200px) {
+            .assoclist tr> :nth-of-type(2) {
+                display: none
+            }
+        }
+
+        #output, #combinations, #optional { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Memorable Password Generator</h1>
+        <div id="inputForm"></div>
+        <div id="output"></div>
+    </div>
+
+    <!-- Modal for complexity details -->
+    <div class="modal fade" id="complexityModal" tabindex="-1" aria-labelledby="complexityModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="complexityModalLabel">Password Complexity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="complexityModalBody">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('inputForm').innerHTML = `
+            <form id="passwordForm">
+                <div>
+                <label for="minLength">Minimum Word Length:</label>
+                <input type="number" id="minLength" min="3" max="9" value="4" required>
+                </div>
+                <div>
+                <label for="maxLength">Maximum Word Length:</label>
+                <input type="number" id="maxLength" min="1" max="9" value="6" required>
+                </div>
+                <div>
+                <label for="numWords">Number of Words:</label>
+                <input type="number" id="numWords" min="1" max="20" value="3" required>
+                </div>
+                <div>
+                <label for="numPasswords">Number of Passwords:</label>
+                <input type="number" id="numPasswords" min="1" max="99" value="10" required>
+                </div>
+                <div id="optional"></div>
+                <div>
+                <label for="firstWord">1st Word:</label>
+                <input type="text" id="firstWord" min="3" max="20" value="">
+                </div>
+                <div>
+                <label for="secondWord">2nd Word:</label>
+                <input type="text" id="secondWord" min="3" max="20" value="">
+                </div>
+                <div>
+                <label for="thirdWord">3rd Word:</label>
+                <input type="text" id="thirdWord" min="3" max="20" value="">
+                </div>
+                <button type="button" onclick="generatePasswords()">Generate Passwords</button>
+            </form>
+        `;
+        document.getElementById('optional').textContent = 'Optional';
+        document.getElementById('output').textContent = '';
+        const inputminlength = document.getElementById('minLength');
+        inputminlength.addEventListener('input', function() {
+            if (this.value && !isNaN(this.value)) {
+                this.value = Math.max(3, Math.min(9, parseInt(this.value)));
+            }
+        });
+        const inputmaxlength = document.getElementById('maxLength');
+        inputmaxlength.addEventListener('input', function() {
+            if (this.value && !isNaN(this.value)) {
+                this.value = Math.max(3, Math.min(9, parseInt(this.value)));
+            }
+        });
+        const inputnumword = document.getElementById('numWords');
+        inputnumword.addEventListener('input', function() {
+            if (this.value && !isNaN(this.value)) {
+                this.value = Math.max(1, Math.min(20, parseInt(this.value)));
+            }
+        });
+        const inputnumpass = document.getElementById('numPasswords');
+        inputnumpass.addEventListener('input', function() {
+            if (this.value && !isNaN(this.value)) {
+                this.value = Math.max(1, Math.min(99, parseInt(this.value)));
+            }
+        });
+        const inputWord1 = document.getElementById('firstWord');
+        inputWord1.addEventListener('input', function() {
+            if (this.value.length > 20) {
+                this.value = this.value.slice(0, 20);
+            }
+        });
+
+        inputWord1.addEventListener('blur', function() {
+            if (this.value.length < 3) {
+                this.value = '';
+                this.placeholder = 'Must be 3 letters or more';
+            }
+        });
+        const inputWord2 = document.getElementById('secondWord');
+        inputWord2.addEventListener('input', function() {
+            if (this.value.length > 20) {
+                this.value = this.value.slice(0, 20);
+            }
+        });
+
+        inputWord2.addEventListener('blur', function() {
+            if (this.value.length < 3) {
+                this.value = '';
+                this.placeholder = 'Must be 3 letters or more';
+            }
+        });
+        const inputWord3 = document.getElementById('thirdWord');
+        inputWord3.addEventListener('input', function() {
+            if (this.value.length > 20) {
+                this.value = this.value.slice(0, 20);
+            }
+        });
+
+        inputWord3.addEventListener('blur', function() {
+            if (this.value.length < 3) {
+                this.value = '';
+                this.placeholder = 'Must be 3 letters or more';
+            }
+        });
+
+        function getRandomWord(dictionary, minLength, maxLength) {
+            let word;
+            do {
+                word = dictionary[Math.floor(Math.random() * dictionary.length)];
+            } while (word.length < minLength || word.length > maxLength);
+            return word;
+        }
+
+        function generatePasswords() {
+            const minLength = parseInt(document.getElementById('minLength').value);
+            const maxLength = parseInt(document.getElementById('maxLength').value);
+            const numWords = parseInt(document.getElementById('numWords').value);
+            const numPasswords = parseInt(document.getElementById('numPasswords').value);
+            const firstWord = document.getElementById('firstWord').value;
+            const secondWord = document.getElementById('secondWord').value;
+            const thirdWord = document.getElementById('thirdWord').value;
+
+            fetch('https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt')
+                .then(response => response.text())
+                .then(data => {
+                    const dictionary = data.split('\n');
+                    const specialChars = "!%^*()[]{}_-=?#;:<>.|~";
+
+                    let word;
+                    let output = '';
+                    const passwordPromises = [];
+                    for (let p = 0; p < numPasswords; p++) {
+                        const randomSpecialChar = specialChars.charAt(Math.floor(Math.random() * specialChars.length));
+                        let password = '';
+                        for (let w = 0; w < numWords; w++) {
+                            if ((w === 0) && (firstWord !== ""))
+                            {
+                                word = firstWord;
+                            }
+                            else if ((w === 1) && (secondWord !== ""))
+                            {
+                                word = secondWord;
+                            }
+                            else if ((w === 2) && (thirdWord !== ""))
+                            {
+                                word = thirdWord;
+                            }
+                            else
+                            {
+                                word = getRandomWord(dictionary, minLength, maxLength);
+                            }
+                            const capitalizedWord = word.charAt(0).toUpperCase() + word.slice(1);
+                            password += capitalizedWord;
+
+                            // Add random numbers and special characters
+                            const randomNumber = Math.floor(Math.random() * 10);
+                            if (w < numWords - 1) {
+                                password += `${randomNumber}${randomSpecialChar}`;
+                            } else {
+                                password += `${randomNumber}`;
+                            }
+                            
+                        }
+                        passwordPromises.push(checkPassword(password));
+                    }
+                    Promise.all(passwordPromises).then(results => {
+                        output = `
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Not Leaked</th>
+                                    <th>Complexity</th>
+                                    <th>Password</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        `;
+                        results.forEach(result => {
+                            const complexity = checkComplexity(result.password);
+                            const complexityColor = getComplexityColor(complexity);
+                            
+                            output += `
+                            <tr>
+                                <td>${result.compromised ? 
+                                    '<i class="bi bi-x-circle-fill text-danger"></i>' : 
+                                    '<i class="bi bi-check-circle-fill text-success"></i>'}
+                                </td>
+                                <td>
+                                    <span class="complexity-indicator" onclick="showComplexityDetails('${result.password}', this)">
+                                    <i class="bi bi-circle-fill" style="color: ${getComplexityColor(checkComplexity(result.password))}"></i>
+                                </span>
+                                </td>
+                                <td class="${result.compromised ? 'text-danger' : 'text-success'}">
+                                    ${escapeHtml(result.password)}
+                                </td>
+                            </tr>`;
+                        });
+                        output += `
+                            </tbody>
+                        </table>
+                        <p>Password check powered by haveibeenpwned.com</p>`;
+                        document.getElementById('output').innerHTML = output;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error reading the file:', error);
+                });
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function checkPassword(password) {
+            const sha1 = CryptoJS.SHA1(password).toString().toUpperCase();
+            const prefix = sha1.substr(0, 5);
+            const suffix = sha1.substr(5);
+
+            return fetch(`https://api.pwnedpasswords.com/range/${prefix}`)
+                .then(response => response.text())
+                .then(data => {
+                    const hashes = data.split('\n');
+                    const match = hashes.find(hash => hash.startsWith(suffix));
+                    return {
+                        password: password,
+                        compromised: match !== undefined
+                    };
+                });
+        }
+
+        function checkComplexity(password) {
+            let score = 0;
+            if (password.length >= 12) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            return score;
+        }
+
+        function getComplexityColor(score) {
+            if (score < 3) return 'red';
+            if (score < 5) return 'orange';
+            return 'green';
+        }
+
+        function showComplexityDetails(password, element) { //complexity, element) {
+            const description = getComplexityDescription(password); //complexity);
+            const modalBody = document.getElementById('complexityModalBody');
+            modalBody.innerHTML = description.replace(/\n/g, '<br>');
+            
+            const modal = new bootstrap.Modal(document.getElementById('complexityModal'));
+            modal.show();
+            
+            // Position the modal near the clicked element
+            const modalElement = document.querySelector('.modal-dialog');
+            modalElement.style.position = '';
+            modalElement.style.top = '';
+            modalElement.style.left = '';
+        }
+
+        //function getComplexityDescription(score) {
+        //    let description = 'Password should have:\n';
+        //    description += '- At least 12 characters\n';
+        //    description += '- Lowercase letters\n';
+        //    description += '- Uppercase letters\n';
+        //    description += '- Numbers\n';
+        //    description += '- Special characters\n';
+        //    description += `Current score: ${score}/5`;
+        //    return description;
+        //}
+
+        function getComplexityDescription(password) {
+            const rules = [
+                { test: pwd => pwd.length >= 12, text: 'At least 12 characters' },
+                { test: pwd => /[a-z]/.test(pwd), text: 'Lowercase letters' },
+                { test: pwd => /[A-Z]/.test(pwd), text: 'Uppercase letters' },
+                { test: pwd => /[0-9]/.test(pwd), text: 'Numbers' },
+                { test: pwd => /[^A-Za-z0-9]/.test(pwd), text: 'Special characters !%^*()[]{}_-=?#;:<>.|~' }
+            ];
+
+            let description = '<p>Password should have:</p><ul style="list-style-type: none; padding-left: 0;">';
+            let score = 0;
+
+            rules.forEach(rule => {
+                const passed = rule.test(password);
+                if (passed) score++;
+                const color = passed ? 'green' : 'red';
+                const symbol = passed ? '✓' : '✗';
+                description += `<li style="color: ${color};">${symbol} ${rule.text}</li>`;
+            });
+
+            description += '</ul>';
+            description += `<p>Current score: <span style="color: ${getComplexityColor(score)};">${score}/5</span></p>`;
+
+            return description;
+        }
+
+        function generateCombinations() {
+
+            const word = document.getElementById('word').value;
+            const minNumber = parseInt(document.getElementById('minNum').value, 10);
+            const maxNumber = parseInt(document.getElementById('maxNum').value, 10);
+            const minSpecial = parseInt(document.getElementById('minSpecial').value, 10);
+            const maxSpecial = parseInt(document.getElementById('maxSpecial').value, 10);
+                   
+            const startTime = performance.now(); // Start measuring time
+
+            // Initialize the list to store combinations
+            const combinations = [];
+            const specialChars = "!%^*()[]{}_-=?#;:<>.|~";
+            const upper = word.charAt(0).toUpperCase() + word.slice(1);
+            const lower = word.charAt(0).toLowerCase() + word.slice(1);
+
+            // Rule 1: Uppercase first letter
+            combinations.push(upper);
+
+            // Rule 2: Lowercase first letter
+            combinations.push(lower);
+
+            // Rule 3: Add a special character at the end
+            for (const char of specialChars) {
+            for (let count = minSpecial; count <= maxSpecial; count++) {
+                combinations.push(upper + char.repeat(count));
+                combinations.push(lower + char.repeat(count));
+            }
+            }
+
+            // Rule 4: Add a number between minNumber and maxNumber
+            for (let num = minNumber; num <= maxNumber; num++) {
+                combinations.push(upper + num);
+                combinations.push(lower + num);
+            }
+
+            // Rule 5: Combination with a number at the start
+            for (let num = minNumber; num <= maxNumber; num++) {
+                combinations.push(num + upper);
+                combinations.push(num + lower);
+            }
+
+            // Rule 7: Add a special character and a number
+            for (const char of specialChars) {
+            for (let count = minSpecial; count <= maxSpecial; count++) {
+                for (let num = minNumber; num <= maxNumber; num++) {
+                    combinations.push(upper + char.repeat(count) + num);
+                    combinations.push(lower + char.repeat(count) + num);
+                }
+            }
+            }
+
+            // Rule 8: Combination with a number at the start
+            for (let num = minNumber; num <= maxNumber; num++) {
+                for (const char of specialChars) {
+                for (let count = minSpecial; count <= maxSpecial; count++) {
+                    combinations.push(num + char.repeat(count) + upper);
+                    combinations.push(num + char.repeat(count) + lower);
+                }
+                }
+            }
+
+            const endTime = performance.now(); // Stop measuring time
+            const totalTime = endTime - startTime;
+            const totalCombinations = combinations.length;
+
+            timeoutput = `Generated ${totalCombinations} combinations in ${totalTime.toFixed(2)} milliseconds.`;
+            combinationsoutput = combinations.join(', ');
+
+            output = `<p>${timeoutput}</br></br>${combinationsoutput}</p>`;
+            document.getElementById('output').innerHTML = output;
+        }
+
+        // Example usage
+        // generateCombinations(word, minNumber, maxNumber, minSpecial, maxSpecial);
+        // generateMemorablePasswords();
+        // Display the results in the output div
+        document.getElementById('output').textContent = 'Choose an option above.';
+    </script>
+</body>
+</html>
