@@ -6,3 +6,4 @@
 # Guessable Passwords
 2. guessablepasswords.html is a tool to see how long it would take to create a
    all compinations of a single word password.
+   http://rawcdn.githack.com/AKrawczyk/Memorable-Password-Generators/main/guessablepasswords.html
