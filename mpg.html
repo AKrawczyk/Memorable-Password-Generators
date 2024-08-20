@@ -757,10 +757,14 @@
         }
 
         function checkPassword(password) {
-            const sha1 = CryptoJS.SHA1(password).toString().toUpperCase();
-            const prefix = sha1.substr(0, 5);
-            const suffix = sha1.substr(5);
-
+            // Generate a salt (in a real application, use a unique salt for each password)
+            const salt = CryptoJS.lib.WordArray.random(128 / 8).toString();
+        
+            // Hash the password with the salt using SHA-512
+            const sha512 = CryptoJS.SHA512(password + salt).toString().toUpperCase();
+            const prefix = sha512.substr(0, 5);
+            const suffix = sha512.substr(5);
+        
             return fetch(`https://api.pwnedpasswords.com/range/${prefix}`)
                 .then(response => response.text())
                 .then(data => {
