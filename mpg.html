@@ -709,7 +709,9 @@
                                 <tr>
                                     <th>Not Leaked</th>
                                     <th>Complexity</th>
+                                    <th>Strength</th>
                                     <th>Password</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody>
@@ -717,6 +719,9 @@
                         results.forEach(result => {
                             const complexity = checkComplexity(result.password);
                             const complexityColor = getComplexityColor(complexity);
+                            const yearsToCrack = calculateTimeToCrack(result.password);
+                            const americanTime = convertYearsToName(yearsToCrack, 'american');
+                            const britishTime = convertYearsToName(yearsToCrack, 'british');
                             
                             output += `
                             <tr>
@@ -729,6 +734,11 @@
                                     <i class="bi bi-circle-fill" style="color: ${getComplexityColor(checkComplexity(result.password))}"></i>
                                 </span>
                                 </td>
+                                <td>
+                                    British: ${Math.round(britishTime.value)} ${Math.round(britishTime.value) === 1 ? britishTime.unit : britishTime.pluralUnit}
+                                    (American: ${Math.round(americanTime.value)} ${Math.round(americanTime.value) === 1 ? americanTime.unit : americanTime.pluralUnit})
+                                    
+                                </td>
                                 <td class="${result.compromised ? 'text-danger' : 'text-success'}">
                                     ${escapeHtml(result.password)}
                                 </td>
@@ -738,7 +748,8 @@
                             </tbody>
                         </table>
                         <p>Password check powered by <a href=https://www.haveibeenpwned.com>haveibeenpwned.com</a></p>
-                        <p>Check password security and complexity <a href=https://www.security.org/how-secure-is-my-password/>how-secure-is-my-password</a></p> `;
+                        <p>The password strength used here is calculated based on 200 billion password combinations generated per second.
+                        </br></br>Second scource to check password strength <a href=https://www.security.org/how-secure-is-my-password/>how-secure-is-my-password</a></p>`;
                         document.getElementById('output').innerHTML = output;
                     });
                 })
@@ -912,6 +923,87 @@
 
             output = `<p>${timeoutput}</br></br>${combinationsoutput}</p>`;
             document.getElementById('output').innerHTML = output;
+        }
+
+        function convertYearsToName(years, system = 'american') {
+            const names = {
+                0: [['second', 'seconds'], ['second', 'seconds']],
+                1: [['minute', 'minutes'], ['minute', 'minutes']],
+                2: [['hour', 'hours'], ['hour', 'hours']],
+                3: [['day', 'days'], ['day', 'days']],
+                4: [['year', 'years'], ['year', 'years']],
+                9: [['billion years', 'billion years'], ['thousand million years', 'thousand million years']],
+                12: [['trillion years', 'trillion years'], ['billion years', 'billion years']],
+                15: [['quadrillion years', 'quadrillion years'], ['thousand billion years', 'thousand billion years']],
+                18: [['quintillion years', 'quintillion years'], ['trillion years', 'trillion years']],
+                21: [['sextillion years', 'sextillion years'], ['thousand trillion years', 'thousand trillion years']],
+                24: [['septillion years', 'septillion years'], ['quadrillion years', 'quadrillion years']],
+                27: [['octillion years', 'octillion years'], ['thousand quadrillion years', 'thousand quadrillion years']],
+                30: [['nonillion years', 'nonillion years'], ['quintillion years', 'quintillion years']],
+                33: [['decillion years', 'decillion years'], ['thousand quintillion years', 'thousand quintillion years']],
+                36: [['undecillion years', 'undecillion years'], ['sextillion years', 'sextillion years']],
+                39: [['duodecillion years', 'duodecillion years'], ['thousand sextillion years', 'thousand sextillion years']],
+                42: [['tredecillion years', 'tredecillion years'], ['septillion years', 'septillion years']],
+                45: [['quattuordecillion years', 'quattuordecillion years'], ['thousand septillion years', 'thousand septillion years']],
+                84: [['', ''], ['quattuordecillion years', 'quattuordecillion years']],
+                100: [['googol years', 'googol years'], ['googol years', 'googol years']],
+                303: [['centillion years', 'centillion years'], ['', '']],
+                600: [['', ''], ['centillion years', 'centillion years']]
+            };
+            
+            const index = system === 'american' ? 0 : 1;
+    
+            if (years < 1 / (365 * 24 * 60 * 60)) {
+                return { value: 0, unit: "seconds" };
+            } else if (years < 1 / (24 * 60)) {
+                return { value: years * 365 * 24 * 60 * 60, unit: "seconds" };
+            } else if (years < 1 / 24) {
+                return { value: years * 365 * 24 * 60, unit: "minutes" };
+            } else if (years < 1) {
+                return { value: years * 365 * 24, unit: "hours" };
+            } else if (years < 365) {
+                return { value: years * 365, unit: "days" };
+            }
+            
+            for (let [power, name] of Object.entries(names).sort((a, b) => b[0] - a[0])) {
+                if (years >= Math.pow(10, power) && name[index]) {
+                    return { 
+                        value: years / Math.pow(10, power), 
+                        unit: name[index][0],
+                        pluralUnit: name[index][1]
+                    };
+                }
+            }
+            
+            return { value: Infinity, unit: "googolplex years or more" };
+        }
+
+        function calculateTimeToCrack(password) {
+            const charSets = {
+                lower: 26,
+                upper: 26,
+                digits: 10,
+                symbols: 21 // Assuming a basic set of symbols
+            };
+
+            let combinations = 1;
+            let charSetSize = 0;
+
+            if (/[a-z]/.test(password)) charSetSize += charSets.lower;
+            if (/[A-Z]/.test(password)) charSetSize += charSets.upper;
+            if (/\d/.test(password)) charSetSize += charSets.digits;
+            if (/[^a-zA-Z\d]/.test(password)) charSetSize += charSets.symbols;
+
+            combinations = Math.pow(charSetSize, password.length);
+
+            // Assuming a modern computer can try 1 billion passwords per second
+            const attemptsPerSecond = 200e9;
+            const secondsInYear = 60 * 60 * 24 * 365;
+
+            const timeInSeconds = combinations / attemptsPerSecond;
+            const timeInYears = timeInSeconds / secondsInYear;
+
+            return timeInYears;
         }
 
         // Example usage
