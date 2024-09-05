@@ -827,6 +827,10 @@
         //}
 
         function getComplexityDescription(password) {
+            const yearsToCrack = calculateTimeToCrack(password);
+            const americanTime = convertYearsToName(yearsToCrack, 'american');
+            const britishTime = convertYearsToName(yearsToCrack, 'british');
+            
             const rules = [
                 { test: pwd => pwd.length >= 12, text: 'At least 12 characters' },
                 { test: pwd => /[a-z]/.test(pwd), text: 'Lowercase letters' },
@@ -848,7 +852,9 @@
 
             description += '</ul>';
             description += `<p>Current score: <span style="color: ${getComplexityColor(score)};">${score}/5</span></p>`;
-
+            description += '<p>Strength:</p><ul style="list-style-type: none; padding-left: 0;">';
+            description += `<p>British: ${Math.round(britishTime.value)} ${Math.round(britishTime.value) === 1 ? britishTime.unit : britishTime.pluralUnit}</p>`;
+            description += `<p>American: ${Math.round(americanTime.value)} ${Math.round(americanTime.value) === 1 ? americanTime.unit : americanTime.pluralUnit}</p>`;
             return description;
         }
 
@@ -926,12 +932,31 @@
         }
 
         function convertYearsToName(years, system = 'american') {
+            const secondsInMinute = 60;
+            const secondsInHour = 3600;
+            const secondsInDay = 86400;
+            const secondsInYear = 31536000;  // Assuming 365 days in a year for simplicity
+
+            const totalSeconds = years * secondsInYear;
+
+            if (totalSeconds < 1) {
+                return { value: 1, unit: "second", pluralUnit: "seconds" };
+            } else if (totalSeconds < secondsInMinute) {
+                return { value: Math.round(totalSeconds), unit: "second", pluralUnit: "seconds" };
+            } else if (totalSeconds < secondsInHour) {
+                return { value: Math.round(totalSeconds / secondsInMinute), unit: "minute", pluralUnit: "minutes" };
+            } else if (totalSeconds < secondsInDay) {
+                return { value: Math.round(totalSeconds / secondsInHour), unit: "hour", pluralUnit: "hours" };
+            } else if (totalSeconds < secondsInYear) {
+                return { value: Math.round(totalSeconds / secondsInDay), unit: "day", pluralUnit: "days" };
+            } else if (years < 100) {
+                return { value: Math.round(years), unit: "year", pluralUnit: "years" };
+            }
+
             const names = {
-                0: [['second', 'seconds'], ['second', 'seconds']],
-                1: [['minute', 'minutes'], ['minute', 'minutes']],
-                2: [['hour', 'hours'], ['hour', 'hours']],
-                3: [['day', 'days'], ['day', 'days']],
-                4: [['year', 'years'], ['year', 'years']],
+                2: [['hundred years', 'hundred years'], ['hundred years', 'hundred years']],
+                3: [['thousand years', 'thousand years'], ['thousand years', 'thousand years']],
+                6: [['million years', 'million years'], ['million years', 'million years']],
                 9: [['billion years', 'billion years'], ['thousand million years', 'thousand million years']],
                 12: [['trillion years', 'trillion years'], ['billion years', 'billion years']],
                 15: [['quadrillion years', 'quadrillion years'], ['thousand billion years', 'thousand billion years']],
@@ -952,21 +977,9 @@
             };
             
             const index = system === 'american' ? 0 : 1;
-    
-            if (years < 1 / (365 * 24 * 60 * 60)) {
-                return { value: 0, unit: "seconds" };
-            } else if (years < 1 / (24 * 60)) {
-                return { value: years * 365 * 24 * 60 * 60, unit: "seconds" };
-            } else if (years < 1 / 24) {
-                return { value: years * 365 * 24 * 60, unit: "minutes" };
-            } else if (years < 1) {
-                return { value: years * 365 * 24, unit: "hours" };
-            } else if (years < 365) {
-                return { value: years * 365, unit: "days" };
-            }
-            
+
             for (let [power, name] of Object.entries(names).sort((a, b) => b[0] - a[0])) {
-                if (years >= Math.pow(10, power) && name[index]) {
+                if (years >= Math.pow(10, power)) {
                     return { 
                         value: years / Math.pow(10, power), 
                         unit: name[index][0],
@@ -996,7 +1009,7 @@
 
             combinations = Math.pow(charSetSize, password.length);
 
-            // Assuming a modern computer can try 1 billion passwords per second
+            // Assuming a modern computer can try 200 billion passwords per second
             const attemptsPerSecond = 200e9;
             const secondsInYear = 60 * 60 * 24 * 365;
 
