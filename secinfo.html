@@ -65,28 +65,19 @@
     <!-- This is where the main content is displayed -->
     <div class="main">
         <div class="container">
-            <h1>Memorable Password Generator</h1>
-            <div id="inputForm"></div>
-            <div id="output"></div>
-        </div>
-        
-        <!-- Included Java script needed to process the passwords -->
-        <script src="password.js"></script>
-        <script>
-            importFormMPG();
-        </script>
-    </div>
-
-     <!-- Modal for complexity details -->
-     <div class="modal fade" id="complexityModal" tabindex="-1" aria-labelledby="complexityModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="complexityModalLabel">Password Complexity</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="complexityModalBody">
-                </div>
+            <h1>Code Security Information</h1>
+            <div class="password-guidelines">
+                <h4>Code Security</h4>
+                <ul>
+                    <li>Code has been check by SYNK for weekness and vunerabilities and none were discovered.</li>
+                    <li>All code is run directly on the user device and only they know the passwords generated.</li>
+                    <li>Password tests are done localy, except HaveIBeenpwned.</li>
+                    <li>Password needing to be checked on HaveIBeenpwned are SHA-1 encrypted, then uploaded via https (SSL tunnel) and the SHA-1 hash is checked against the hash database.</li>
+                    <li>The password strength used here is calculated based on 200 billion password combinations generated per second (Brute force attack) and shows large numbers using the British and US scale.</li>
+                    </br>
+                    <li>Password check powered by <a href="https://haveibeenpwned.com" target="_blank" rel="noopener noreferrer">haveibeenpwned.com</a></li>
+                    <li>Secondary scource to check password strength <a href="https://www.security.org/how-secure-is-my-password/" target="_blank" rel="noopener noreferrer">www.security.org/how-secure-is-my-password</a></li>
+                </ul>
             </div>
         </div>
     </div>

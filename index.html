@@ -65,28 +65,30 @@
     <!-- This is where the main content is displayed -->
     <div class="main">
         <div class="container">
-            <h1>Memorable Password Generator</h1>
-            <div id="inputForm"></div>
-            <div id="output"></div>
-        </div>
-        
-        <!-- Included Java script needed to process the passwords -->
-        <script src="password.js"></script>
-        <script>
-            importFormMPG();
-        </script>
-    </div>
-
-     <!-- Modal for complexity details -->
-     <div class="modal fade" id="complexityModal" tabindex="-1" aria-labelledby="complexityModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="complexityModalLabel">Password Complexity</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="complexityModalBody">
-                </div>
+            <h1>Strong Password Guidelines</h1>
+            <div class="password-guidelines">
+                <h4>General Password Guidelines</h4>
+                <ul>
+                    <li><i class="bi bi-circle-fill"></i>Use a combination of uppercase and lowercase letters, numbers, and special characters.</li>
+                    <li><i class="bi bi-circle-fill"></i>Password should be a minimum of 12 charachters.</li>
+                </ul>
+                </br>
+                <h4>Memorable Passwords</h4>
+                <ul>
+                    <li><i class="bi bi-circle-fill"></i>Use 3 Simple Words.</li>
+                    <li><i class="bi bi-circle-fill"></i>Password should be between 12 to 20 charachters.</li>
+                </ul>
+                </br>
+                <h4>Password Best Practice</h4>
+                <ul>
+                    <li><i class="bi bi-circle-fill"></i>Do not share your passwords with anyone.</li>
+                    <li><i class="bi bi-circle-fill"></i>Never write down your password.</li>
+                    <li><i class="bi bi-circle-fill"></i>Do not include personal information in your password. For example, pet names or special dates.</li>
+                    <li><i class="bi bi-circle-fill"></i>Do not use the same password for multiple accounts.</li>
+                    </br>
+                    <li><i class="bi bi-circle-fill"></i>Consider the use of a <strong>Password Manager</strong>.</li>
+                    <li><i class="bi bi-circle-fill"></i>Consider setting <strong>MFA</strong> (Multi-Factor Authentication) for your accounts.</li>
+                </ul>
             </div>
         </div>
     </div>
